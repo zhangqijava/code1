@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--做Dao接口实现  -->
+<mapper namespace="com.zs.pms.dao.ArticleDao">
+	<sql id="where">
+	<where>
+	<if test="title!=null and title!=''">
+			and title=#{title}
+		</if>
+		<if test="author!=null and author!=''">
+			and author=#{author}
+		</if>
+	</where>
+		
+	</sql>
+	<sql id="seletor">
+		select * from tarticle
+	</sql>
+	<!--分页  -->
+	<sql id="page">
+		<where>
+			<if test="start!=0">
+				and rn&gt;=#{start}
+			</if>
+			<if test="end!=0">
+				and rn&lt;=#{end}
+			</if>
+		</where>
+	</sql>
+	<sql id="order">
+		order by id desc
+	</sql>
+	<!--分页查询  -->
+	<select id="queryByPage" parameterType="Tarticle" resultType="Tarticle">
+		select * from (
+			select rownum rn,t.* from(
+			<include refid="seletor"/>
+			<include refid="order"></include>
+			)t
+		)
+		<include refid="page"/>
+	</select>
+	<!--根据条件查询  -->
+	<select id="queryByCon" parameterType="QueryArticle" resultType="Tarticle">
+		<include refid="seletor"/>
+		<include refid="where"/>
+		
+	</select>
+	<!--根据id查询  -->
+	<select id="queryById" parameterType="int" resultType="Tarticle">
+		select * from tarticle where id=#{id}
+	</select>
+	<!--批量删除  -->
+	<delete id="deleteByIds">
+		delete from tarticle where id in
+		<foreach collection="array" item="id" separator="," open="(" close=")">
+			#{id}
+		</foreach>
+	</delete>
+	<!--删除一条  -->
+	<delete id="delete">
+		delete from tarticle where id=#{id}
+	</delete>
+	<!--文章修改  -->
+	<update id="update" parameterType="Tarticle">
+		update tarticle
+			<set>
+				<!--去掉最后一个逗号  -->
+				<trim suffixOverrides=",">
+					<if test="title!=null and title!=''">
+						title=#{title},
+					</if>
+					<if test="content!=null and content!=''">
+						content=#{content},
+					</if>
+					<if test="author!=null and author!=''">
+						author=#{author},
+					</if>
+					<if test="channel!=0">
+						channel=#{channel},
+					</if>
+					<if test="isrecommend!=0">
+						isrecommend=#{isrecommend},
+					</if>
+					<if test="ishot!=0">
+						ishot=#{ishot}
+					</if>
+				</trim>
+			</set>
+			where id=#{id}
+	</update>
+	<!--文章新增  -->
+	<insert id="insert">
+		<selectKey keyProperty="id" order="BEFORE" resultType="int">
+			select seq_article.nextval from dual
+		</selectKey>
+		insert into tarticle values(#{id},#{title},#{content},#{author},#{creatime},#{channel},#{isrecommend},#{ishot}) 
+	</insert>
+	<!--查询总条数  -->
+	<select id="queryCount" resultType="int">
+		select count(1) from tarticle
+	</select>
+</mapper>
+
